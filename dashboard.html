@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-white text-black font-['Inter',sans-serif] antialiased flex items-center justify-center relative overflow-x-hidden">
+  <!-- Background decorations -->
+  <div class="bg-deco bg-deco--1"></div>
+  <div class="bg-deco bg-deco--2"></div>
+  <div class="bg-deco bg-deco--3"></div>
+
+  <!-- Main content -->
+  <div id="app" class="relative z-10 w-full max-w-md px-5"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    const app = document.getElementById('app');
+
+    (async () => {
+      const user = await Auth.getCurrentUser();
+      if (!user) { location.href = 'login.html'; return; }
+
+      const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const activities = ActivityStore.getAll();
+
+      const activityHtml = activities.length
+        ? activities.map(a => `
+            <li class="flex items-center gap-3.5 py-3.5 border-b border-gray-100 last:border-0 hover:bg-gray-50 -mx-3 px-3 rounded-lg transition-colors duration-200">
+              <span class="w-2 h-2 rounded-full flex-shrink-0 ${a.color === 'green' ? 'bg-emerald-500' : a.color === 'red' ? 'bg-red-500' : 'bg-black'}"></span>
+              <span class="text-sm text-gray-600">${a.text}</span>
+              <span class="ml-auto text-xs text-gray-400 flex-shrink-0">${a.time}</span>
+            </li>`).join('')
+        : '<li class="py-4 text-sm text-gray-400">No activity yet</li>';
+
+      app.innerHTML = `
+        <div class="page-enter">
+          <div class="bg-white border border-gray-200 rounded-2xl p-10 shadow-[0_2px_40px_rgba(0,0,0,0.06)] transition-all duration-500 hover:shadow-[0_8px_60px_rgba(0,0,0,0.1)] hover:-translate-y-0.5">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-8 stagger">
+              <h2 class="text-xl font-semibold tracking-tight">Dashboard</h2>
+              <div class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold cursor-default transition-transform duration-500 hover:scale-110" title="${user.name}">
+                ${initials}
+              </div>
+            </div>
+
+            <div class="stagger">
+              <!-- Stats grid -->
+              <div class="grid grid-cols-2 gap-3.5 mb-7">
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 text-center transition-all duration-300 hover:border-black hover:-translate-y-1 hover:shadow-md cursor-default">
+                  <div class="text-3xl font-bold text-black">1</div>
+                  <div class="text-[11px] text-gray-400 uppercase tracking-widest mt-1">Sessions</div>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 text-center transition-all duration-300 hover:border-black hover:-translate-y-1 hover:shadow-md cursor-default">
+                  <div class="text-3xl font-bold text-black">0</div>
+                  <div class="text-[11px] text-gray-400 uppercase tracking-widest mt-1">Projects</div>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 text-center transition-all duration-300 hover:border-black hover:-translate-y-1 hover:shadow-md cursor-default">
+                  <div class="text-3xl font-bold text-black">${activities.length}</div>
+                  <div class="text-[11px] text-gray-400 uppercase tracking-widest mt-1">Actions</div>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 text-center transition-all duration-300 hover:border-black hover:-translate-y-1 hover:shadow-md cursor-default">
+                  <div class="text-3xl font-bold text-black">0</div>
+                  <div class="text-[11px] text-gray-400 uppercase tracking-widest mt-1">Messages</div>
+                </div>
+              </div>
+
+              <!-- Divider -->
+              <div class="flex items-center gap-4 my-6 text-gray-400 text-[11px] uppercase tracking-[1.5px] font-medium">
+                <span class="flex-1 h-px bg-gray-200"></span>
+                <span>Recent Activity</span>
+                <span class="flex-1 h-px bg-gray-200"></span>
+              </div>
+
+              <!-- Activity list -->
+              <ul class="-mx-3">${activityHtml}</ul>
+
+              <!-- Actions -->
+              <div class="mt-8 flex gap-3">
+                <a href="login.html" class="btn flex-1 py-3.5 bg-white text-black text-sm font-semibold rounded-xl border border-gray-200 text-center relative overflow-hidden transition-all duration-300 hover:border-black hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.97]" style="text-decoration:none;">
+                  Switch Account
+                </a>
+                <button id="logout-btn" class="btn flex-1 py-3.5 bg-black text-white text-sm font-semibold rounded-xl relative overflow-hidden transition-all duration-300 hover:bg-gray-800 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.97]">
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await Auth.signOut();
+        location.href = 'login.html';
+      });
+    })();
+  </script>
+</body>
+</html>

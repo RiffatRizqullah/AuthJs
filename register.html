@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-white text-black font-['Inter',sans-serif] antialiased flex items-center justify-center relative overflow-x-hidden">
+  <!-- Background decorations -->
+  <div class="bg-deco bg-deco--1"></div>
+  <div class="bg-deco bg-deco--2"></div>
+  <div class="bg-deco bg-deco--3"></div>
+
+  <!-- Main content -->
+  <div id="app" class="relative z-10 w-full max-w-md px-5">
+    <div class="page-enter">
+      <div class="bg-white border border-gray-200 rounded-2xl p-10 shadow-[0_2px_40px_rgba(0,0,0,0.06)] transition-all duration-500 hover:shadow-[0_8px_60px_rgba(0,0,0,0.1)] hover:-translate-y-0.5">
+        <div class="brand text-center mb-10">
+          <div class="w-14 h-14 mx-auto mb-4 bg-black rounded-2xl flex items-center justify-center text-white text-xl font-bold transition-transform duration-500 hover:scale-110 hover:-rotate-3 cursor-default shadow-md hover:shadow-xl">
+            ✦
+          </div>
+          <h1 class="text-2xl font-semibold tracking-tight">Create account</h1>
+          <p class="text-gray-500 text-sm mt-1.5">Get started for free</p>
+        </div>
+
+        <div class="stagger">
+          <div id="reg-msg"></div>
+
+          <div class="mb-5">
+            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Name</label>
+            <input type="text" id="reg-name"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-black placeholder-gray-400 transition-all duration-200 focus:bg-white focus:border-black focus:outline-none hover:border-gray-300"
+              placeholder="John Doe" autocomplete="name">
+          </div>
+
+          <div class="mb-5">
+            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Email</label>
+            <input type="email" id="reg-email"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-black placeholder-gray-400 transition-all duration-200 focus:bg-white focus:border-black focus:outline-none hover:border-gray-300"
+              placeholder="you@example.com" autocomplete="email">
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Password</label>
+            <div class="relative">
+              <input type="password" id="reg-pass"
+                class="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl text-sm text-black placeholder-gray-400 transition-all duration-200 focus:bg-white focus:border-black focus:outline-none hover:border-gray-300"
+                placeholder="Min 6 characters" autocomplete="new-password">
+              <button type="button" id="toggle-pass" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors duration-200 p-1" aria-label="Toggle password">👁</button>
+            </div>
+          </div>
+
+          <button id="reg-btn" class="btn w-full py-3.5 bg-black text-white text-sm font-semibold rounded-xl relative overflow-hidden transition-all duration-300 hover:bg-gray-800 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.97]">
+            Create Account
+          </button>
+
+          <div class="text-center mt-7 text-sm text-gray-500">
+            Already have an account? <a href="login.html" class="text-black font-medium hover:underline underline-offset-2 transition-all duration-200">Sign in</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    (async () => {
+      const user = await Auth.getCurrentUser();
+      if (user) location.href = 'dashboard.html';
+    })();
+
+    document.getElementById('toggle-pass').addEventListener('click', function () {
+      const inp = document.getElementById('reg-pass');
+      if (inp.type === 'password') { inp.type = 'text'; this.textContent = '🔒'; }
+      else { inp.type = 'password'; this.textContent = '👁'; }
+    });
+
+    document.getElementById('reg-btn').addEventListener('click', handleRegister);
+    document.getElementById('reg-pass').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleRegister();
+    });
+
+    async function handleRegister() {
+      const msgEl = document.getElementById('reg-msg');
+      const btn = document.getElementById('reg-btn');
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+
+      if (!name || !email || !pass) {
+        msgEl.innerHTML = '<div class="mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 animate-[staggerIn_0.3s_ease_forwards]">Please fill in all fields.</div>';
+        return;
+      }
+
+      if (pass.length < 6) {
+        msgEl.innerHTML = '<div class="mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 animate-[staggerIn_0.3s_ease_forwards]">Password must be at least 6 characters.</div>';
+        return;
+      }
+
+      btn.textContent = 'Please wait…';
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+
+      try {
+        await Auth.signUp({ name, email, password: pass });
+        location.href = 'dashboard.html';
+      } catch (err) {
+        msgEl.innerHTML = `<div class="mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 animate-[staggerIn_0.3s_ease_forwards]">${err.message}</div>`;
+        btn.textContent = 'Create Account';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    }
+  </script>
+</body>
+</html>
